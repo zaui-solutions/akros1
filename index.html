@@ -1,0 +1,519 @@
+// === GLOBAL JS UTILITIES ===
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // --- SCROLL PROGRESS BAR ---
+        function updateScrollProgress() {
+            const progress = document.getElementById('scroll-progress');
+            if (progress && !prefersReducedMotion) {
+                const totalHeight = document.body.scrollHeight - window.innerHeight;
+                const scrollPosition = window.scrollY;
+                const percentage = (scrollPosition / totalHeight) * 100;
+                progress.style.width = percentage + '%';
+            }
+        }
+        window.addEventListener('scroll', updateScrollProgress);
+
+        // --- SCROLL REVEAL (for punchlines and sections) ---
+        const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        scrollRevealElements.forEach(el => {
+            observer.observe(el);
+        });
+
+        // === TESTIMONIAL TYPEWRITER EFFECT ===
+        function typewriterEffect(element, text, delay = 50) {
+            if (prefersReducedMotion) {
+                element.textContent = text;
+                return;
+            }
+            element.textContent = ''; // Clear existing content
+            let i = 0;
+            const timer = setInterval(() => {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(timer);
+                }
+            }, delay);
+        }
+
+        function initTestimonialTypewriter() {
+            const quotes = document.querySelectorAll('.testimonial-quote');
+            
+            // Observe quotes as they enter the viewport
+            const quoteObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.target.dataset.revealed !== 'true') {
+                        const quoteElement = entry.target;
+                        const quoteText = quoteElement.dataset.quote;
+                        
+                        // Use a slight random delay for a more organic feel
+                        const delay = 50 + Math.random() * 20; 
+                        typewriterEffect(quoteElement, `"${quoteText}"`, delay);
+                        quoteElement.dataset.revealed = 'true';
+                        quoteObserver.unobserve(quoteElement);
+                    }
+                });
+            }, { threshold: 0.8 });
+
+            quotes.forEach(quote => {
+                quote.textContent = '...ACCESSING_DATA'; // Placeholder text until revealed
+                quote.dataset.revealed = 'false';
+                quoteObserver.observe(quote);
+            });
+        }
+        // ===================================
+
+
+        // === MACRO CALCULATOR LOGIC & UNIT TOGGLES ===
+        const macroForm = document.getElementById('macro-calculator');
+        const resultsOutput = document.getElementById('results-output');
+        const weightInput = document.getElementById('weight');
+        const heightCmInput = document.getElementById('height-cm');
+        const heightFtInput = document.getElementById('height-ft');
+        const heightInInput = document.getElementById('height-in');
+        
+        // New Toggle Elements
+        const weightUnitKgBtn = document.getElementById('weight-unit-kg');
+        const weightUnitLbBtn = document.getElementById('weight-unit-lb');
+        const heightUnitCmBtn = document.getElementById('height-unit-cm');
+        const heightUnitImpBtn = document.getElementById('height-unit-imp');
+        const heightLabel = document.getElementById('height-label');
+
+        const heightImperialGroup = document.getElementById('height-imperial-group');
+        const statusText = document.getElementById('status-text');
+
+        let isMetric = true; // Default to Metric (KG, CM)
+
+        // --- CONVERSION UTILS ---
+        const CONV_LB_TO_KG = 0.453592;
+        const CONV_IN_TO_CM = 2.54;
+
+        function convertCmToImperial(cm) {
+            const totalInches = cm / CONV_IN_TO_CM;
+            const feet = Math.floor(totalInches / 12);
+            const inches = Math.round(totalInches % 12);
+            return { feet, inches };
+        }
+
+        function convertImperialToCm(feet, inches) {
+            const totalInches = (feet * 12) + inches;
+            return totalInches * CONV_IN_TO_CM;
+        }
+
+        // --- UNIT TOGGLE HANDLERS ---
+        function updateWeightToggle(toKg) {
+            if (isMetric !== toKg) {
+                isMetric = toKg;
+                const value = parseFloat(weightInput.value) || 0;
+                
+                if (isMetric) {
+                    // To KG (from LB)
+                    weightInput.value = Math.round(value * CONV_LB_TO_KG);
+                    weightUnitKgBtn.classList.add('active');
+                    weightUnitLbBtn.classList.remove('active');
+                } else {
+                    // To LB (from KG)
+                    weightInput.value = Math.round(value / CONV_LB_TO_KG);
+                    weightUnitLbBtn.classList.add('active');
+                    weightUnitKgBtn.classList.remove('active');
+                }
+            }
+        }
+
+        function updateHeightToggle(toCm) {
+            const isCm = heightUnitCmBtn.classList.contains('active');
+
+            if (toCm && !isCm) {
+                // To Metric (CM)
+                heightUnitCmBtn.classList.add('active');
+                heightUnitImpBtn.classList.remove('active');
+                heightCmInput.parentNode.classList.remove('hidden');
+                heightImperialGroup.classList.add('hidden');
+                heightLabel.textContent = 'HEIGHT (CM)';
+
+                // Update CM input based on current imperial values
+                const ft = parseFloat(heightFtInput.value) || 0;
+                const inches = parseFloat(heightInInput.value) || 0;
+                heightCmInput.value = Math.round(convertImperialToCm(ft, inches));
+            } else if (!toCm && isCm) {
+                // To Imperial (FT/IN)
+                heightUnitImpBtn.classList.add('active');
+                heightUnitCmBtn.classList.remove('active');
+                heightCmInput.parentNode.classList.add('hidden');
+                heightImperialGroup.classList.remove('hidden');
+                heightLabel.textContent = 'HEIGHT (FT/IN)';
+
+                // Update imperial inputs based on current CM value
+                const cmValue = parseFloat(heightCmInput.value);
+                if (!isNaN(cmValue)) {
+                    const { feet, inches } = convertCmToImperial(cmValue);
+                    heightFtInput.value = feet;
+                    heightInInput.value = inches;
+                }
+            }
+        }
+        
+        // Ensure initial state is set correctly on load (Metric active)
+        function initializeUnitToggles() {
+            // Weight default to KG
+            weightUnitKgBtn.classList.add('active');
+            weightUnitLbBtn.classList.remove('active');
+            isMetric = true;
+
+            // Height default to CM
+            heightUnitCmBtn.classList.add('active');
+            heightUnitImpBtn.classList.remove('active');
+            heightCmInput.parentNode.classList.remove('hidden');
+            heightImperialGroup.classList.add('hidden');
+            heightLabel.textContent = 'HEIGHT (CM)';
+        }
+
+        weightUnitKgBtn.addEventListener('click', () => updateWeightToggle(true));
+        weightUnitLbBtn.addEventListener('click', () => updateWeightToggle(false));
+        heightUnitCmBtn.addEventListener('click', () => updateHeightToggle(true));
+        heightUnitImpBtn.addEventListener('click', () => updateHeightToggle(false));
+
+
+        // --- MAIN CALCULATION ---
+        macroForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculateMacros();
+        });
+
+        function calculateMacros() {
+            statusText.textContent = 'PROCESSING...';
+            
+            // 1. Get raw values
+            const A = parseInt(document.getElementById('age').value);
+            const G = document.getElementById('gender').value;
+            const activityMultiplier = parseFloat(document.getElementById('activity').value);
+            const goal = document.getElementById('goal').value;
+
+            // Get Weight in KG
+            let W_KG = parseFloat(weightInput.value);
+            if (!isMetric) {
+                W_KG = W_KG * CONV_LB_TO_KG; 
+            }
+
+            // Get Height in CM
+            let H_CM;
+            const usingCm = heightUnitCmBtn.classList.contains('active');
+            
+            if (usingCm) {
+                H_CM = parseFloat(heightCmInput.value);
+            } else {
+                const ft = parseFloat(heightFtInput.value) || 0;
+                const inches = parseFloat(heightInInput.value) || 0;
+                H_CM = convertImperialToCm(ft, inches);
+            }
+
+            if (isNaN(W_KG) || isNaN(H_CM) || isNaN(A) || W_KG <= 0 || H_CM <= 0) {
+                statusText.textContent = 'ERROR: INVALID DATA';
+                console.error("Invalid input data for analysis.");
+                return;
+            }
+
+            // 2. Calculate BMR (Mifflin-St Jeor Metric)
+            let BMR;
+            if (G === 'male') {
+                BMR = (10 * W_KG) + (6.25 * H_CM) - (5 * A) + 5;
+            } else { // female
+                BMR = (10 * W_KG) + (6.25 * H_CM) - (5 * A) - 161;
+            }
+
+            // 3. Calculate TDEE
+            let TDEE = BMR * activityMultiplier;
+
+            // 4. Adjust TDEE based on Goal
+            let targetCalories;
+            if (goal === 'cut') {
+                targetCalories = TDEE - 500; // Aggressive cut
+            } else if (goal === 'bulk') {
+                targetCalories = TDEE + 300; // Lean bulk
+            } else {
+                targetCalories = TDEE;
+            }
+            
+            // Ensure minimum calorie safety
+            if (targetCalories < 1200) targetCalories = 1200;
+
+            // 5. Calculate Macros (Aggressive Lifting Split: 40% P, 40% C, 20% F)
+            const proteinCal = targetCalories * 0.40;
+            const carbCal = targetCalories * 0.40;
+            const fatCal = targetCalories * 0.20;
+
+            const proteinGrams = Math.round(proteinCal / 4);
+            const carbGrams = Math.round(carbCal / 4);
+            const fatGrams = Math.round(fatCal / 9);
+
+            // 6. Display Results
+            document.getElementById('res-calories').textContent = Math.round(targetCalories);
+            document.getElementById('res-protein').textContent = proteinGrams;
+            document.getElementById('res-carbs').textContent = carbGrams;
+            document.getElementById('res-fat').textContent = fatGrams;
+            
+            resultsOutput.classList.remove('hidden');
+            statusText.textContent = 'PRESCRIPTION ISSUED';
+            
+            resultsOutput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+
+        // === LOTTIE ANIMATION INITIALIZATION ===
+        const lottieData = lottie.loadAnimation({
+            container: document.getElementById('lottie-data-flow'),
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            // Minimal Red Data Flow / Processing Chart (Actual Lottie URL)
+            path: 'https://assets5.lottiefiles.com/packages/lf20_l4h7y37u.json', 
+            rendererSettings: {
+                preserveAspectRatio: 'xMidYMid slice'
+            }
+        });
+
+
+        // === AURORA RIBBON CANVAS ANIMATION SCRIPT (RE-COLORED & GLITCHED) ===
+        const AURORA = {
+            init: function() {
+                this.canvas = document.getElementById('interactive-background');
+                this.kickerWordSpan = document.getElementById('kicker_word'); 
+                this.primaryCTA = document.getElementById('cta_primary');
+                this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+
+                if (!this.canvas || !this.ctx) return;
+                
+                this.mouse = { x: null, y: null };
+                this.time = 0;
+                this.currentBlurMultiplier = 1; 
+                this.globalSpeed = 0.0001; 
+                this.waveAmplitude = 15;
+                this.mouseEffectRadius = 300;
+                this.mouseEffectStrength = 20;
+                this.baseRadius = 300; 
+                this.FADE_COLOR = 'rgba(0, 0, 0, 0.1)'; 
+                this.numPoints = 120;
+                this.ribbons = [];
+                
+                this.auroraColors = [
+                    { color: 'rgba(215, 38, 56, 0.25)', blur: 15 }, 
+                    { color: 'rgba(215, 38, 56, 0.15)', blur: 10 }, 
+                    { color: 'rgba(45, 45, 45, 0.10)', blur: 8 },    
+                    { color: 'rgba(255, 255, 255, 0.08)', blur: 6 }, 
+                    { color: 'rgba(215, 38, 56, 0.12)', blur: 9 }, 
+                    { color: 'rgba(45, 45, 45, 0.07)', blur: 5 }, 
+                    { color: 'rgba(215, 38, 56, 0.18)', blur: 11 }, 
+                    { color: 'rgba(0, 0, 0, 0.05)', blur: 3 }
+                ];
+
+                this.setupEvents();
+                this.resizeCanvas(); 
+                this.animate();
+            },
+
+            setupEvents: function() {
+                window.addEventListener('resize', this.resizeCanvas.bind(this));
+                window.addEventListener('mousemove', this.updateMousePosition.bind(this));
+                window.addEventListener('touchmove', this.updateMousePosition.bind(this));
+                window.addEventListener('mouseleave', () => { this.mouse.x = null; this.mouse.y = null; });
+                
+                if (this.primaryCTA && !prefersReducedMotion) {
+                    this.primaryCTA.addEventListener('mouseenter', () => {
+                        this.currentBlurMultiplier = 2.5; 
+                    });
+                    this.primaryCTA.addEventListener('mouseleave', () => {
+                        this.currentBlurMultiplier = 1; 
+                    });
+                }
+            },
+
+            resizeCanvas: function() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.initRibbons();
+            },
+
+            initRibbons: function() {
+                this.ribbons = [];
+                const numRibbons = this.auroraColors.length;
+
+                for (let i = 0; i < numRibbons; i++) {
+                    const radiusMultiplier = 1 + (i * 0.03); 
+                    const phaseOffset = i * (Math.PI / 4); 
+                    
+                    const points = [];
+                    for (let j = 0; j < this.numPoints; j++) {
+                        points.push({ angle: (j / this.numPoints) * Math.PI * 2 });
+                    }
+                    
+                    this.ribbons.push({
+                        points: points,
+                        radius: this.baseRadius * radiusMultiplier,
+                        phase: phaseOffset,
+                        color: this.auroraColors[i].color,
+                        blur: this.auroraColors[i].blur
+                    });
+                }
+            },
+
+            updateMousePosition: function(event) {
+                 if (event.touches && event.touches.length > 0) {
+                    this.mouse.x = event.touches[0].clientX;
+                    this.mouse.y = event.touches[0].clientY;
+                } else if (event.clientX !== undefined) {
+                    this.mouse.x = event.clientX;
+                    this.mouse.y = event.clientY;
+                }
+            },
+
+            drawAuroraRibbon: function() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                this.ribbons.forEach(ribbon => {
+                    
+                    const calculatedPoints = ribbon.points.map(p => {
+                        const wave = Math.sin(p.angle * 4 + this.time * this.globalSpeed * 150 + ribbon.phase) * (this.waveAmplitude + Math.random() * 5);
+                        const breath = Math.sin(p.angle * 2 + this.time * this.globalSpeed * 100 + ribbon.phase / 2) * (this.waveAmplitude / 3);
+                        
+                        let radius = ribbon.radius + wave + breath;
+
+                        const rotation = Math.sin(this.time * this.globalSpeed * 75);
+                        const currentAngle = p.angle + rotation * 0.1;
+
+                        let pointX = centerX + Math.cos(currentAngle) * radius;
+                        let pointY = centerY + Math.sin(currentAngle) * radius;
+                        
+                        let dx = this.mouse.x - pointX;
+                        let dy = this.mouse.y - pointY;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < this.mouseEffectRadius && this.mouse.x !== null) {
+                            const strength = (1 - distance / this.mouseEffectRadius) * this.mouseEffectStrength;
+                            radius += strength * Math.sin(this.time * 0.02 + Math.random() * 0.5); 
+                        }
+
+                        return {
+                            x: centerX + Math.cos(currentAngle) * radius,
+                            y: centerY + Math.sin(currentAngle) * radius
+                        };
+                    });
+                    
+                    this.ctx.beginPath();
+                    
+                    this.ctx.shadowBlur = ribbon.blur * this.currentBlurMultiplier;
+                    this.ctx.shadowColor = ribbon.color;
+                    this.ctx.strokeStyle = ribbon.color;
+                    this.ctx.lineWidth = 2.5; 
+
+                    let p1 = calculatedPoints[calculatedPoints.length - 1]; 
+                    this.ctx.moveTo(p1.x, p1.y);
+
+                    calculatedPoints.forEach(p => {
+                        this.ctx.lineTo(p.x, p.y);
+                    });
+                    
+                    this.ctx.closePath(); 
+                    this.ctx.stroke();
+                    
+                    this.ctx.shadowBlur = 0;
+                });
+            },
+
+            animate: function() {
+                try {
+                    requestAnimationFrame(this.animate.bind(this));
+                    this.ctx.fillStyle = this.FADE_COLOR; 
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); 
+
+                    this.time++; 
+                    this.drawAuroraRibbon();
+                    
+                } catch (e) {
+                    console.error("Aurora Ribbon Animation error:", e);
+                }
+            }
+        };
+
+
+        // --- ICON INTERACTIVITY LOGIC ---
+        function setupIconInteractivity() {
+            const featureList = document.getElementById('the-engine'); 
+            const iconContainers = featureList ? featureList.querySelectorAll('div[class*="group"]') : [];
+            
+            if (featureList && iconContainers.length > 0 && !prefersReducedMotion) {
+                featureList.addEventListener('mousemove', (e) => {
+                    iconContainers.forEach(container => {
+                        const rect = container.getBoundingClientRect();
+                        const centerX = rect.left + rect.width / 2;
+                        const centerY = rect.top + rect.height / 2;
+
+                        const moveX = (e.clientX - centerX) / 15; 
+                        const moveY = (e.clientY - centerY) / 15;
+
+                        container.style.transform = `translate3d(${-moveX}px, ${-moveY}px, 0)`;
+                    });
+                });
+
+                featureList.addEventListener('mouseleave', () => {
+                    iconContainers.forEach(container => {
+                        container.style.transform = 'translate3d(0, 0, 0)';
+                    });
+                });
+            }
+        }
+
+
+        window.onload = function() {
+            AURORA.init();
+
+            // --- HERO LOGIC ---
+            const kickerWords = ["dedicated", "disciplined", "unyielding", "relentless"]; 
+            let wordIndex = 0;
+            const kickerWordSpan = document.getElementById('kicker_word');
+
+            function cycleKickerText() {
+                if (!kickerWordSpan) return;
+                const updateWord = () => {
+                    kickerWordSpan.textContent = kickerWords[wordIndex];
+                    wordIndex = (wordIndex + 1) % kickerWords.length;
+                };
+                updateWord();
+                setInterval(updateWord, 3500); 
+            }
+            cycleKickerText();
+
+            function revealHeroHeadlines() {
+                if (prefersReducedMotion) {
+                    document.getElementById('line1').style.opacity = 1;
+                    document.getElementById('line2').style.opacity = 1;
+                    return;
+                }
+                const line2 = document.getElementById('line2');
+                setTimeout(() => {
+                    document.getElementById('line1').style.animation = 'text-flicker 1.5s ease-out 1 forwards';
+                }, 300);
+                setTimeout(() => {
+                    line2.style.opacity = 1;
+                    line2.style.animation = 'text-flicker 1.2s ease-out 1 forwards';
+                }, 1500);
+            }
+            revealHeroHeadlines();
+
+            // --- INIT CALLS ---
+            initializeUnitToggles(); // IMPORTANT: Ensure toggles are initialized correctly on load
+            setupIconInteractivity();
+            updateScrollProgress(); 
+            initTestimonialTypewriter(); 
+        };
+    </script>
