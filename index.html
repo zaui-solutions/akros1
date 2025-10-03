@@ -1,4 +1,643 @@
-// === GLOBAL JS UTILITIES ===
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akros | Prove Yourself or Step Out.</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Anton for aggressive headings, Inter for clean body text -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Anton&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Define Akros Color Palette and Fonts */
+        :root {
+            --color-bg: #000000; /* Pure Black */
+            --color-fg: #FFFFFF; /* Pure White */
+            --color-accent: #D72638; /* Blood Red */
+            --color-secondary: #2D2D2D; /* Steel Grey */
+            --font-heading: 'Anton', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        /* Base Body Styles */
+        body {
+            font-family: var(--font-body);
+            background-color: var(--color-bg);
+            color: var(--color-fg);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- STABLE BACKGROUND EFFECT (CSS only) --- */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            /* Radial gradient simulates central energy field / aurora glow */
+            background: radial-gradient(circle at center, rgba(215, 38, 56, 0.1) 0%, rgba(0, 0, 0, 1) 70%);
+        }
+
+        /* Faint Grain/Static Overlay (for raw, gritty texture) */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Above gradient, below content */
+            pointer-events: none;
+            /* Subtle dark grain texture */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            background-blend-mode: overlay;
+        }
+        
+        /* --- SCROLL PROGRESS BAR --- */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background-color: var(--color-accent);
+            z-index: 50;
+        }
+        
+        /* --- UI COMPONENTS & ANIMATIONS --- */
+
+        /* Headline Glitch Animation (CSS only version) */
+        .glitch-text {
+            display: inline-block;
+            animation: none; 
+            text-shadow: 0 0 0.5rem rgba(215, 38, 56, 0.5);
+            line-height: 0.95; 
+        }
+        
+        /* CTA Glitch Hover Effect */
+        @keyframes glitch-hover {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(2px, -2px); }
+            50% { transform: translate(-2px, 2px); }
+            75% { transform: translate(2px, 2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* CTA Button Style */
+        .akros-btn {
+            height: 60px; 
+            border-radius: 0; 
+            background-color: var(--color-accent);
+            color: var(--color-fg);
+            font-weight: 700;
+            font-family: var(--font-heading);
+            transition: all 0.2s ease-in-out;
+        }
+        .akros-btn:hover {
+            animation: glitch-hover 0.2s infinite;
+            box-shadow: 0 0 30px rgba(215, 38, 56, 0.8);
+        }
+        .akros-btn-secondary {
+             background-color: var(--color-secondary);
+             color: var(--color-fg);
+             border: 2px solid var(--color-secondary);
+        }
+        .akros-btn-secondary:hover {
+            animation: none;
+            background-color: var(--color-bg);
+            border-color: var(--color-accent);
+            box-shadow: 0 0 10px rgba(215, 38, 56, 0.5);
+        }
+        
+        /* Headings */
+        h1, h2 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Body Copy */
+        .punchline {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-fg);
+            line-height: 1.4;
+        }
+        /* Custom emphasis style for copy corrections */
+        .copy-emphasis {
+            color: var(--color-accent);
+            font-weight: 700;
+        }
+
+        /* Scroll Animation Target */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* --- Testimonial Card Fixes --- */
+        .card-glow-border {
+            border: 1px solid transparent;
+            background: linear-gradient(var(--color-bg), var(--color-bg)) padding-box, 
+                        linear-gradient(45deg, rgba(215, 38, 56,0.4), rgba(45, 45, 45,0.3)) border-box;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        /* --- Image Section Styling --- */
+        .image-frame {
+            position: relative;
+            aspect-ratio: 16 / 9; 
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8) inset;
+        }
+        .image-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(1.8) brightness(0.7);
+        }
+        
+        /* --- Macro Calculator Styles --- */
+        .macro-input {
+            background-color: var(--color-secondary);
+            border: 1px solid var(--color-accent);
+            color: var(--color-fg);
+            padding: 10px 15px;
+            border-radius: 0;
+            font-family: var(--font-body);
+            flex-grow: 1;
+            appearance: none; 
+        }
+        .macro-result-box {
+            background-color: var(--color-secondary);
+            border: 2px solid var(--color-accent);
+            border-radius: 0;
+            padding: 1rem 0.5rem; 
+        }
+        .macro-value {
+            font-family: var(--font-heading);
+            font-size: 2.5rem;
+            color: var(--color-accent);
+            line-height: 1;
+        }
+        
+        /* Analyzer Terminal Look */
+        #calculator-terminal {
+            background-color: var(--color-secondary);
+            border: 3px solid var(--color-secondary);
+            box-shadow: 0 0 25px rgba(215, 38, 56, 0.3);
+        }
+
+        /* Unit Toggle Switches */
+        .unit-switch button {
+            background-color: var(--color-secondary);
+            color: var(--color-fg);
+            padding: 0.5rem 0.75rem;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            font-family: var(--font-heading);
+        }
+        .unit-switch button.active {
+            background-color: var(--color-accent);
+            color: var(--color-bg);
+            box-shadow: 0 0 8px rgba(215, 38, 56, 0.5);
+        }
+        .unit-switch button:first-child { border-radius: 0.25rem 0 0 0.25rem; }
+        .unit-switch button:last-child { border-radius: 0 0.25rem 0.25rem 0; }
+        .unit-switch button:not(:last-child) { border-right: 1px solid var(--color-bg); }
+
+        /* CSS Animation for Data Processing Bar */
+        @keyframes processing {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .processing-bar {
+            height: 4px;
+            background-color: var(--color-accent);
+            width: 30%;
+            animation: processing 1.5s infinite linear;
+        }
+    </style>
+    <!-- Tailwind Customization -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'akros-bg': 'var(--color-bg)',
+                        'akros-fg': 'var(--color-fg)',
+                        'akros-accent': 'var(--color-accent)',
+                        'akros-secondary': 'var(--color-secondary)',
+                    },
+                    spacing: {
+                        '12': '3rem',
+                        '16': '4rem',
+                        '20': '5rem',
+                        '24': '6rem',
+                        '32': '8rem', 
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="selection:bg-akros-accent selection:text-akros-bg">
+
+    <!-- SCROLL PROGRESS BAR -->
+    <div id="scroll-progress"></div>
+
+    <!-- MAIN CONTENT CONTAINER (Z-index 10) -->
+    <main class="relative z-10 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+        
+        <!-- Header/Navigation (Minimal) -->
+        <header class="flex justify-start py-6">
+            <div class="text-3xl font-extrabold text-akros-accent tracking-widest font-heading">
+                AKROS
+            </div>
+        </header>
+
+        <!-- 1. HERO SECTION (Full Screen) -->
+        <section id="hero-section" class="h-screen flex flex-col justify-center items-center text-center -mx-4 sm:mx-auto relative z-10 p-4">
+            
+            <div class="space-y-4 mb-16 max-w-4xl">
+                <!-- Glitch Reveal Headline 1 -->
+                <h1 id="line1" class="text-5xl sm:text-7xl lg:text-9xl font-black leading-none text-akros-fg tracking-tighter uppercase glitch-text">
+                    This app isn’t built for everybody.
+                </h1>
+                <!-- Glitch Reveal Headline 2 -->
+                <h2 id="line2" class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-akros-accent mb-8 tracking-wider uppercase glitch-text opacity-0">
+                    Only the <span id="kicker_word" class="highlight-word">dedicated</span>.
+                </h2>
+            </div>
+            
+            <p id="hero_sub" class="punchline max-w-2xl mb-12 scroll-reveal text-akros-fg">
+                Stage-ready science for lifters who want results, not excuses.
+            </p>
+
+            <!-- PROMINENT CTA -->
+            <div class="mb-12 scroll-reveal">
+                <a id="cta_primary" href="#the-analyzer" class="akros-btn text-2xl uppercase shadow-lg hover:shadow-akros-accent/50 lp_cta_step_in_click px-12">
+                    Prove You’re Ready
+                </a>
+            </div>
+
+            <div id="chips_row" class="flex space-x-4 mb-4 scroll-reveal">
+                <div class="px-3 py-1 text-sm rounded-full bg-akros-secondary text-akros-fg border border-akros-secondary">Bulk</div>
+                <div class="px-3 py-1 text-sm rounded-full bg-akros-secondary text-akros-fg border border-akros-secondary">Cut</div>
+                <div class="px-3 py-1 text-sm rounded-full bg-akros-secondary text-akros-fg border border-akros-secondary">Peak</div>
+            </div>
+        </section>
+
+        <!-- 2. THE PROBLEM (Why Most Fail) -->
+        <hr class="border-akros-secondary opacity-20 my-32 max-w-xl mx-auto">
+        <section id="the-problem" class="min-h-[50vh] flex flex-col justify-center text-center py-12 scroll-reveal">
+            <h2 class="text-6xl font-heading text-akros-accent mb-16 uppercase">
+                Why You Fail.
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
+                <p class="punchline text-akros-fg tracking-wide scroll-reveal">
+                    95% of lifters fail. You stall, then you quit.
+                </p>
+                <p class="punchline text-akros-fg tracking-wide scroll-reveal">
+                    Macros wrong. Training scattered. No system.
+                </p>
+                <p class="punchline text-akros-fg tracking-wide scroll-reveal">
+                    Akros fixes this — <span class="copy-emphasis">no excuses.</span>
+                </p>
+            </div>
+            <!-- Visual: Cracked Barbell Graphic (SVG) -->
+            <svg class="w-48 h-10 mx-auto mt-16 text-akros-secondary scroll-reveal" viewBox="0 0 100 20" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="0" y="5" width="100" height="10" rx="3" fill="#151515"/>
+                <!-- Crack/Break -->
+                <line x1="48" y1="5" x2="52" y2="15" stroke="var(--color-accent)" stroke-width="3" stroke-linecap="round"/>
+                <line x1="50" y1="5" x2="50" y2="15" stroke="var(--color-accent)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </section>
+
+        <!-- 3. UNCOMPROMISING PRECISION (Image + Features) -->
+        <hr class="border-akros-secondary opacity-20 my-32 max-w-xl mx-auto">
+        <section id="uncompromising-precision" class="py-12 bg-akros-secondary/10 relative overflow-hidden scroll-reveal">
+             <div class="max-w-4xl mx-auto image-frame border-4 border-akros-secondary mb-16 shadow-2xl shadow-black/80">
+                <img src="https://images.ctfassets.net/8urtyqugdt2l/5fBTAMNQZJ3WMWYRwhxg6s/ad2d701c351fd518f4c51073efd1b025/desktop-leg-exercises.jpg" 
+                     alt="High contrast image of a lifter's legs under heavy load during a workout." 
+                     class="opacity-[0.35] brightness-125"/>
+            </div>
+            <h2 class="text-6xl font-heading text-akros-fg text-center mb-16 uppercase">
+                Uncompromising Precision.
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center relative z-10">
+                
+                <div class="flex flex-col items-center group relative p-4" data-id="01">
+                    <h3 class="text-5xl font-extrabold text-akros-accent mb-4">01</h3>
+                    <p class="text-xl font-semibold text-akros-fg mb-2">Exact targets.</p>
+                    <p class="text-akros-secondary">Calories, macros, weekly adjustments.</p>
+                </div>
+                
+                <div class="flex flex-col items-center group relative p-4" data-id="02">
+                    <h3 class="text-5xl font-extrabold text-akros-accent mb-4">02</h3>
+                    <p class="text-xl font-semibold text-akros-fg mb-2">Exact timeline.</p>
+                    <p class="text-akros-secondary">Start and finish dates, no guesswork.</p>
+                </div>
+                
+                <div class="flex flex-col items-center group relative p-4" data-id="03">
+                    <h3 class="text-5xl font-extrabold text-akros-accent mb-4">03</h3>
+                    <p class="text-xl font-semibold text-akros-fg mb-2">Exact phase.</p>
+                    <p class="text-akros-secondary">Bulk, Cut, or Peak prescribed for you.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. THE ANALYZER (Macro Calculator) - HIGH-TECH TERMINAL -->
+        <hr class="border-akros-secondary opacity-20 my-32 max-w-xl mx-auto">
+        <section id="the-analyzer" class="py-12 scroll-reveal">
+            <h2 class="text-6xl font-heading text-akros-accent text-center mb-12 uppercase">
+                The Analyzer.
+            </h2>
+            <p class="punchline text-akros-fg text-center mb-12 max-w-2xl mx-auto">
+                Calculate your <span class="copy-emphasis">initial prescriptive dose</span>. Input your raw data; receive the immutable blueprint.
+            </p>
+
+            <div id="calculator-terminal" class="max-w-xl mx-auto p-8 space-y-8">
+                
+                <!-- Data Processing Visual (CSS Animated) -->
+                <div class="border border-akros-secondary p-4 bg-akros-bg text-center">
+                    <p class="text-sm font-mono text-akros-accent mb-2">
+                        LIVE DATA PIPELINE // STATUS: <span id="status-text">AWAITING COMMENCEMENT</span>
+                    </p>
+                    <div class="w-full h-1 overflow-hidden bg-akros-secondary relative">
+                        <div id="processing-bar" class="processing-bar absolute top-0 left-0"></div>
+                    </div>
+                </div>
+
+                <!-- Input Terminal -->
+                <form id="macro-calculator" class="space-y-6">
+                    <h3 class="text-xl font-heading text-akros-fg uppercase border-b border-akros-secondary pb-2">INPUT DATA <span class="text-akros-accent font-mono">>></span></h3>
+                    
+                    <!-- Row 1: Weight & Toggle -->
+                    <div class="grid grid-cols-2 gap-4 items-end">
+                        <div class="relative">
+                            <label for="weight" class="text-akros-fg absolute -top-3 left-2 text-xs bg-[#0A0A0A] px-1 font-mono">WEIGHT</label>
+                            <input type="number" id="weight" class="macro-input w-full" value="80" required>
+                        </div>
+                        <div class="unit-switch flex justify-end">
+                            <button type="button" id="weight-unit-kg" class="active">KG</button>
+                            <button type="button" id="weight-unit-lb">LB</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2: Height & Toggle -->
+                    <div class="grid grid-cols-2 gap-4 items-end">
+                        <div class="relative w-full">
+                            <label id="height-label" for="height-cm" class="text-akros-fg absolute -top-3 left-2 text-xs bg-[#0A0A0A] px-1 font-mono">HEIGHT (CM)</label>
+                            <!-- CM Input (Default visible) -->
+                            <input type="number" id="height-cm" class="macro-input w-full" value="180" required>
+                            
+                            <!-- Imperial Inputs (Hidden by default) -->
+                            <div class="flex space-x-2 absolute top-0 left-0 w-full hidden" id="height-imperial-group">
+                                <input type="number" id="height-ft" class="macro-input w-1/2" value="5" placeholder="FT" required>
+                                <input type="number" id="height-in" class="macro-input w-1/2" value="11" placeholder="IN" required>
+                            </div>
+                        </div>
+                        <div class="unit-switch flex justify-end">
+                            <button type="button" id="height-unit-cm" class="active">CM</button>
+                            <button type="button" id="height-unit-imp">FT/IN</button>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Age & Gender -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="relative">
+                            <label for="age" class="text-akros-fg absolute -top-3 left-2 text-xs bg-[#0A0A0A] px-1 font-mono">AGE</label>
+                            <input type="number" id="age" class="macro-input w-full" value="30" required>
+                        </div>
+                        <div class="relative">
+                            <label for="gender" class="text-akros-fg absolute -top-3 left-2 text-xs bg-[#0A0A0A] px-1 font-mono">GENDER</label>
+                            <select id="gender" class="macro-input w-full" required>
+                                <option value="male">MALE</option>
+                                <option value="female">FEMALE</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Activity & Goal -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="relative">
+                            <label for="activity" class="text-akros-fg absolute -top-3 left-2 text-xs bg-[#0A0A0A] px-1 font-mono">ACTIVITY LEVEL</label>
+                            <select id="activity" class="macro-input w-full" required>
+                                <option value="1.55">3-5 days/wk (Moderate)</option>
+                                <option value="1.725">6-7 days/wk (Very Active)</option>
+                                <option value="1.9">Daily/2x sessions (Extreme)</option>
+                                <option value="1.375">1-3 days/wk (Light)</option>
+                                <option value="1.2">Sedentary</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <label for="goal" class="text-akros-fg absolute -top-3 left-2 text-xs bg-[#0A0A0A] px-1 font-mono">GOAL</label>
+                            <select id="goal" class="macro-input w-full" required>
+                                <option value="cut">CUT (FAT LOSS)</option>
+                                <option value="bulk">BULK (MUSCLE GAIN)</option>
+                                <option value="maintain">MAINTAIN (RECOMP)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="akros-btn w-full mt-8 text-xl uppercase">CALCULATE THE DOSE</button>
+                </form>
+
+                <!-- Results Output -->
+                <div id="results-output" class="hidden border-2 border-akros-accent p-4">
+                    <h3 class="text-center text-3xl font-heading text-akros-fg mb-4 uppercase border-b border-akros-accent pb-2">
+                        Prescription Issued:
+                    </h3>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="macro-result-box">
+                            <div class="macro-value" id="res-calories">0</div>
+                            <div class="text-akros-fg text-sm uppercase font-heading">KCAL</div>
+                        </div>
+                        <div class="macro-result-box">
+                            <div class="macro-value" id="res-protein">0</div>
+                            <div class="text-akros-fg text-sm uppercase font-heading">Protein (g)</div>
+                        </div>
+                        <div class="macro-result-box">
+                            <div class="macro-value" id="res-carbs">0</div>
+                            <div class="text-akros-fg text-sm uppercase font-heading">Carbs (g)</div>
+                        </div>
+                        <div class="macro-result-box">
+                            <div class="macro-value" id="res-fat">0</div>
+                            <div class="text-akros-fg text-sm uppercase font-heading">Fat (g)</div>
+                        </div>
+                    </div>
+                    <p class="text-center text-akros-accent mt-4 text-sm font-mono">
+                        // MACRO SPLIT: 40% P / 40% C / 20% F (AGGRESSIVE LIFTING PROTOCOL)
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. THE ENGINE (How It Works) -->
+        <hr class="border-akros-secondary opacity-20 my-32 max-w-xl mx-auto">
+        <section id="the-engine" class="py-12 scroll-reveal">
+            <h2 class="text-6xl font-heading text-akros-fg text-center mb-16 uppercase">
+                The Engine.
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center">
+                
+                <!-- Training Module -->
+                <div class="p-6 border-4 border-akros-secondary hover:border-akros-accent transition-all duration-300 group rounded-md">
+                    <h3 class="text-4xl font-heading text-akros-accent mb-4 group-hover:text-akros-fg transition-colors">
+                        Training
+                    </h3>
+                    <p class="punchline text-akros-fg">
+                        Progression locked to your body. Adaptive volume. <span class="copy-emphasis">Zero guessing.</span>
+                    </p>
+                    <p class="text-akros-secondary text-sm mt-2">
+                        *Biomechanical analysis*
+                    </p>
+                </div>
+                
+                <!-- Nutrition Module -->
+                <div class="p-6 border-4 border-akros-secondary hover:border-akros-accent transition-all duration-300 group rounded-md">
+                    <h3 class="text-4xl font-heading text-akros-accent mb-4 group-hover:text-akros-fg transition-colors">
+                        Nutrition
+                    </h3>
+                    <p class="punchline text-akros-fg">
+                        Every gram dialed. <span class="copy-emphasis">No excuses.</span> Fuel is prescribed, not suggested.
+                    </p>
+                    <p class="text-akros-secondary text-sm mt-2">
+                        *Hyper-calibrated fuel plans*
+                    </p>
+                </div>
+                
+                <!-- Feedback Module -->
+                <div class="p-6 border-4 border-akros-secondary hover:border-akros-accent transition-all duration-300 group rounded-md">
+                    <h3 class="text-4xl font-heading text-akros-accent mb-4 group-hover:text-akros-fg transition-colors">
+                        Feedback
+                    </h3>
+                    <p class="punchline text-akros-fg">
+                        Real-time adjustments. <span class="copy-emphasis">No escape.</span> Deviation means immediate recalibration.
+                    </p>
+                    <p class="text-akros-secondary text-sm mt-2">
+                        *Deviation detection*
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 6. THE PHYSICAL PROOF (Image Section) -->
+        <hr class="border-akros-secondary opacity-20 my-32 max-w-xl mx-auto">
+        <section id="proof-physical" class="py-20 bg-akros-secondary/20 relative overflow-hidden scroll-reveal">
+            <h2 class="text-6xl font-heading text-akros-accent text-center mb-16 uppercase">
+                The Physical Proof.
+            </h2>
+            <div class="max-w-4xl mx-auto image-frame border-4 border-akros-secondary shadow-2xl shadow-black">
+                <img src="https://images.ctfassets.net/8urtyqugdt2l/5fBTAMNQZJ3WMWYRwhxg6s/ad2d701c351fd518f4c51073efd1b025/desktop-leg-exercises.jpg" 
+                     alt="High contrast image of a lifter's legs under heavy load during a workout." 
+                     class="opacity-[0.35] brightness-125"/>
+            </div>
+            <p class="punchline text-akros-fg text-center mt-8 max-w-3xl mx-auto">
+                <span class="copy-emphasis">THIS IS THE RESULT OF PRESCRIPTIVE SCIENCE.</span> THE CODE DOESN'T LIE.
+            </p>
+        </section>
+
+
+        <!-- 7. PROOF (Testimonials - Glitch Typewriter Effect) -->
+        <hr class="border-akros-secondary opacity-20 my-32 max-w-xl mx-auto">
+        <section class="py-12 scroll-reveal">
+            <h2 class="text-6xl font-heading text-akros-fg text-center mb-16 uppercase">
+                The Proof.
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Quote 1 -->
+                <div class="p-6 rounded-lg bg-akros-secondary/20 card-glow-border flex flex-col hover:shadow-akros-accent/50">
+                    <p class="punchline italic text-akros-fg mb-4 testimonial-quote" data-quote="Every gram dialed. My lifts exploded.">
+                        <!-- Initial text for JS to overwrite -->
+                    </p>
+                    <p class="text-sm font-mono text-akros-accent mt-auto">— A.R. | ATHLETE 001</p>
+                </div>
+
+                <!-- Quote 2 -->
+                <div class="p-6 rounded-lg bg-akros-secondary/20 card-glow-border flex flex-col hover:shadow-akros-accent/50">
+                    <p class="punchline italic text-akros-fg mb-4 testimonial-quote" data-quote="Feels like a coach in my pocket.">
+                        <!-- Initial text for JS to overwrite -->
+                    </p>
+                    <p class="text-sm font-mono text-akros-accent mt-auto">— J.K. | ATHLETE 017</p>
+                </div>
+
+                <!-- Quote 3 -->
+                <div class="p-6 rounded-lg bg-akros-secondary/20 card-glow-border flex flex-col hover:shadow-akros-accent/50">
+                    <p class="punchline italic text-akros-fg mb-4 testimonial-quote" data-quote="I stopped guessing. I started winning.">
+                        <!-- Initial text for JS to overwrite -->
+                    </p>
+                    <p class="text-sm font-mono text-akros-accent mt-auto">— M.V. | ATHLETE 204</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. THE CHALLENGE (No Failure) -->
+        <hr class="border-akros-secondary opacity-20 my-32 max-w-xl mx-auto">
+        <section id="the-challenge" class="py-20 text-center relative overflow-hidden">
+            <h2 class="text-6xl sm:text-8xl font-heading text-akros-fg uppercase mb-8 scroll-reveal">
+                We delete failure from the code.
+            </h2>
+            <p class="punchline text-akros-accent max-w-3xl mx-auto scroll-reveal">
+                If you’re in, you commit. If you’re out, <span class="copy-emphasis">step aside.</span>
+            </p>
+        </section>
+
+        <!-- 9. FINAL CALL-TO-ACTION (Exit or Enter) -->
+        <section id="final-cta" class="h-screen flex flex-col justify-center items-center text-center relative z-10 py-20">
+            <h2 class="text-6xl sm:text-7xl font-heading text-akros-fg mb-16 uppercase scroll-reveal">
+                Prove Yourself or Step Out.
+            </h2>
+            <div class="flex flex-col sm:flex-row items-center space-y-6 sm:space-y-0 sm:space-x-8 scroll-reveal">
+                
+                <!-- Enter Akros Button -->
+                <a href="#the-analyzer" class="akros-btn text-2xl uppercase px-16 lp_cta_begin_click">
+                    Enter Akros
+                </a>
+                
+                <!-- Not Ready Button -->
+                <button class="akros-btn akros-btn-secondary text-lg uppercase px-12 lp_not_today_click">
+                    Not Ready
+                </button>
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- 10. Footer -->
+    <footer class="relative z-10 py-6 text-xs border-t border-akros-secondary border-opacity-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center text-akros-secondary">
+            <div class="mb-2 md:mb-0">
+                © Akros
+            </div>
+            <div id="footer_links" class="flex space-x-6 mb-2 md:mb-0">
+                <a href="#" class="hover:text-akros-fg transition">Privacy</a>
+                <a href="#" class="hover:text-akros-fg transition">Terms</a>
+            </div>
+            <div class="text-akros-accent font-mono opacity-50">
+                BUILT WITH DISCIPLINE.
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        // === GLOBAL JS UTILITIES ===
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         // --- SCROLL PROGRESS BAR ---
@@ -28,13 +667,14 @@
             observer.observe(el);
         });
 
-        // === TESTIMONIAL TYPEWRITER EFFECT ===
+        // === TESTIMONIAL TYPEWRITER EFFECT (CSS Fix Only) ===
+        // Note: The typewriter effect logic remains, but we use the existing scroll-reveal
         function typewriterEffect(element, text, delay = 50) {
             if (prefersReducedMotion) {
                 element.textContent = text;
                 return;
             }
-            element.textContent = ''; // Clear existing content
+            element.textContent = ''; 
             let i = 0;
             const timer = setInterval(() => {
                 if (i < text.length) {
@@ -49,14 +689,12 @@
         function initTestimonialTypewriter() {
             const quotes = document.querySelectorAll('.testimonial-quote');
             
-            // Observe quotes as they enter the viewport
             const quoteObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting && entry.target.dataset.revealed !== 'true') {
                         const quoteElement = entry.target;
                         const quoteText = quoteElement.dataset.quote;
                         
-                        // Use a slight random delay for a more organic feel
                         const delay = 50 + Math.random() * 20; 
                         typewriterEffect(quoteElement, `"${quoteText}"`, delay);
                         quoteElement.dataset.revealed = 'true';
@@ -66,7 +704,7 @@
             }, { threshold: 0.8 });
 
             quotes.forEach(quote => {
-                quote.textContent = '...ACCESSING_DATA'; // Placeholder text until revealed
+                quote.textContent = '...ACCESSING_DATA'; 
                 quote.dataset.revealed = 'false';
                 quoteObserver.observe(quote);
             });
@@ -81,8 +719,9 @@
         const heightCmInput = document.getElementById('height-cm');
         const heightFtInput = document.getElementById('height-ft');
         const heightInInput = document.getElementById('height-in');
+        const processingBar = document.getElementById('processing-bar');
         
-        // New Toggle Elements
+        // Toggle Elements
         const weightUnitKgBtn = document.getElementById('weight-unit-kg');
         const weightUnitLbBtn = document.getElementById('weight-unit-lb');
         const heightUnitCmBtn = document.getElementById('height-unit-cm');
@@ -92,7 +731,7 @@
         const heightImperialGroup = document.getElementById('height-imperial-group');
         const statusText = document.getElementById('status-text');
 
-        let isMetric = true; // Default to Metric (KG, CM)
+        let isMetric = true; 
 
         // --- CONVERSION UTILS ---
         const CONV_LB_TO_KG = 0.453592;
@@ -117,12 +756,10 @@
                 const value = parseFloat(weightInput.value) || 0;
                 
                 if (isMetric) {
-                    // To KG (from LB)
                     weightInput.value = Math.round(value * CONV_LB_TO_KG);
                     weightUnitKgBtn.classList.add('active');
                     weightUnitLbBtn.classList.remove('active');
                 } else {
-                    // To LB (from KG)
                     weightInput.value = Math.round(value / CONV_LB_TO_KG);
                     weightUnitLbBtn.classList.add('active');
                     weightUnitKgBtn.classList.remove('active');
@@ -134,55 +771,41 @@
             const isCm = heightUnitCmBtn.classList.contains('active');
 
             if (toCm && !isCm) {
-                // To Metric (CM)
                 heightUnitCmBtn.classList.add('active');
                 heightUnitImpBtn.classList.remove('active');
                 heightCmInput.parentNode.classList.remove('hidden');
                 heightImperialGroup.classList.add('hidden');
                 heightLabel.textContent = 'HEIGHT (CM)';
 
-                // Update CM input based on current imperial values
-                const ft = parseFloat(heightFtInput.value) || 0;
-                const inches = parseFloat(heightInInput.value) || 0;
-                heightCmInput.value = Math.round(convertImperialToCm(ft, inches));
-            } else if (!toCm && isCm) {
-                // To Imperial (FT/IN)
-                heightUnitImpBtn.classList.add('active');
-                heightUnitCmBtn.classList.remove('active');
-                heightCmInput.parentNode.classList.add('hidden');
-                heightImperialGroup.classList.remove('hidden');
-                heightLabel.textContent = 'HEIGHT (FT/IN)';
-
-                // Update imperial inputs based on current CM value
                 const cmValue = parseFloat(heightCmInput.value);
                 if (!isNaN(cmValue)) {
                     const { feet, inches } = convertCmToImperial(cmValue);
                     heightFtInput.value = feet;
                     heightInInput.value = inches;
                 }
+            } else if (!toCm && isCm) {
+                heightUnitImpBtn.classList.add('active');
+                heightUnitCmBtn.classList.remove('active');
+                heightCmInput.parentNode.classList.add('hidden');
+                heightImperialGroup.classList.remove('hidden');
+                heightLabel.textContent = 'HEIGHT (FT/IN)';
+
+                const ft = parseFloat(heightFtInput.value) || 0;
+                const inches = parseFloat(heightInInput.value) || 0;
+                heightCmInput.value = Math.round(convertImperialToCm(ft, inches));
             }
         }
         
-        // Ensure initial state is set correctly on load (Metric active)
         function initializeUnitToggles() {
-            // Weight default to KG
             weightUnitKgBtn.classList.add('active');
-            weightUnitLbBtn.classList.remove('active');
-            isMetric = true;
-
-            // Height default to CM
             heightUnitCmBtn.classList.add('active');
-            heightUnitImpBtn.classList.remove('active');
-            heightCmInput.parentNode.classList.remove('hidden');
-            heightImperialGroup.classList.add('hidden');
-            heightLabel.textContent = 'HEIGHT (CM)';
+            heightImperialGroup.classList.add('hidden'); 
+
+            weightUnitKgBtn.addEventListener('click', () => updateWeightToggle(true));
+            weightUnitLbBtn.addEventListener('click', () => updateWeightToggle(false));
+            heightUnitCmBtn.addEventListener('click', () => updateHeightToggle(true));
+            heightUnitImpBtn.addEventListener('click', () => updateHeightToggle(false));
         }
-
-        weightUnitKgBtn.addEventListener('click', () => updateWeightToggle(true));
-        weightUnitLbBtn.addEventListener('click', () => updateWeightToggle(false));
-        heightUnitCmBtn.addEventListener('click', () => updateHeightToggle(true));
-        heightUnitImpBtn.addEventListener('click', () => updateHeightToggle(false));
-
 
         // --- MAIN CALCULATION ---
         macroForm.addEventListener('submit', function(e) {
@@ -192,261 +815,74 @@
 
         function calculateMacros() {
             statusText.textContent = 'PROCESSING...';
-            
-            // 1. Get raw values
-            const A = parseInt(document.getElementById('age').value);
-            const G = document.getElementById('gender').value;
-            const activityMultiplier = parseFloat(document.getElementById('activity').value);
-            const goal = document.getElementById('goal').value;
+            processingBar.style.display = 'block';
 
-            // Get Weight in KG
-            let W_KG = parseFloat(weightInput.value);
-            if (!isMetric) {
-                W_KG = W_KG * CONV_LB_TO_KG; 
-            }
+            // Simulate data processing delay (for UX)
+            setTimeout(() => {
+                try {
+                    const A = parseInt(document.getElementById('age').value);
+                    const G = document.getElementById('gender').value;
+                    const activityMultiplier = parseFloat(document.getElementById('activity').value);
+                    const goal = document.getElementById('goal').value;
 
-            // Get Height in CM
-            let H_CM;
-            const usingCm = heightUnitCmBtn.classList.contains('active');
-            
-            if (usingCm) {
-                H_CM = parseFloat(heightCmInput.value);
-            } else {
-                const ft = parseFloat(heightFtInput.value) || 0;
-                const inches = parseFloat(heightInInput.value) || 0;
-                H_CM = convertImperialToCm(ft, inches);
-            }
+                    let W_KG = parseFloat(weightInput.value);
+                    if (!isMetric) { W_KG = W_KG * CONV_LB_TO_KG; }
 
-            if (isNaN(W_KG) || isNaN(H_CM) || isNaN(A) || W_KG <= 0 || H_CM <= 0) {
-                statusText.textContent = 'ERROR: INVALID DATA';
-                console.error("Invalid input data for analysis.");
-                return;
-            }
+                    let H_CM;
+                    const usingCm = heightUnitCmBtn.classList.contains('active');
+                    if (usingCm) {
+                        H_CM = parseFloat(heightCmInput.value);
+                    } else {
+                        const ft = parseFloat(heightFtInput.value) || 0;
+                        const inches = parseFloat(heightInInput.value) || 0;
+                        H_CM = convertImperialToCm(ft, inches);
+                    }
 
-            // 2. Calculate BMR (Mifflin-St Jeor Metric)
-            let BMR;
-            if (G === 'male') {
-                BMR = (10 * W_KG) + (6.25 * H_CM) - (5 * A) + 5;
-            } else { // female
-                BMR = (10 * W_KG) + (6.25 * H_CM) - (5 * A) - 161;
-            }
+                    if (isNaN(W_KG) || isNaN(H_CM) || isNaN(A) || W_KG <= 0 || H_CM <= 0) {
+                        statusText.textContent = 'ERROR: INVALID DATA';
+                        processingBar.style.display = 'none';
+                        return;
+                    }
 
-            // 3. Calculate TDEE
-            let TDEE = BMR * activityMultiplier;
+                    // 2. Calculate BMR (Mifflin-St Jeor Metric)
+                    let BMR = (G === 'male') 
+                        ? (10 * W_KG) + (6.25 * H_CM) - (5 * A) + 5
+                        : (10 * W_KG) + (6.25 * H_CM) - (5 * A) - 161;
 
-            // 4. Adjust TDEE based on Goal
-            let targetCalories;
-            if (goal === 'cut') {
-                targetCalories = TDEE - 500; // Aggressive cut
-            } else if (goal === 'bulk') {
-                targetCalories = TDEE + 300; // Lean bulk
-            } else {
-                targetCalories = TDEE;
-            }
-            
-            // Ensure minimum calorie safety
-            if (targetCalories < 1200) targetCalories = 1200;
+                    let TDEE = BMR * activityMultiplier;
+                    
+                    let targetCalories = TDEE;
+                    if (goal === 'cut') { targetCalories = TDEE - 500; } 
+                    else if (goal === 'bulk') { targetCalories = TDEE + 300; }
+                    
+                    if (targetCalories < 1200) targetCalories = 1200;
 
-            // 5. Calculate Macros (Aggressive Lifting Split: 40% P, 40% C, 20% F)
-            const proteinCal = targetCalories * 0.40;
-            const carbCal = targetCalories * 0.40;
-            const fatCal = targetCalories * 0.20;
+                    // 5. Calculate Macros (40% P, 40% C, 20% F)
+                    const proteinGrams = Math.round((targetCalories * 0.40) / 4);
+                    const carbGrams = Math.round((targetCalories * 0.40) / 4);
+                    const fatGrams = Math.round((targetCalories * 0.20) / 9);
 
-            const proteinGrams = Math.round(proteinCal / 4);
-            const carbGrams = Math.round(carbCal / 4);
-            const fatGrams = Math.round(fatCal / 9);
+                    // 6. Display Results
+                    document.getElementById('res-calories').textContent = Math.round(targetCalories);
+                    document.getElementById('res-protein').textContent = proteinGrams;
+                    document.getElementById('res-carbs').textContent = carbGrams;
+                    document.getElementById('res-fat').textContent = fatGrams;
+                    
+                    resultsOutput.classList.remove('hidden');
+                    statusText.textContent = 'PRESCRIPTION ISSUED';
+                    processingBar.style.display = 'none';
+                    
+                    resultsOutput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-            // 6. Display Results
-            document.getElementById('res-calories').textContent = Math.round(targetCalories);
-            document.getElementById('res-protein').textContent = proteinGrams;
-            document.getElementById('res-carbs').textContent = carbGrams;
-            document.getElementById('res-fat').textContent = fatGrams;
-            
-            resultsOutput.classList.remove('hidden');
-            statusText.textContent = 'PRESCRIPTION ISSUED';
-            
-            resultsOutput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } catch (error) {
+                    console.error("Calculation Error:", error);
+                    statusText.textContent = 'ERROR: RECALIBRATE';
+                    processingBar.style.display = 'none';
+                }
+            }, 800); 
         }
 
-
-        // === LOTTIE ANIMATION INITIALIZATION ===
-        const lottieData = lottie.loadAnimation({
-            container: document.getElementById('lottie-data-flow'),
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            // Minimal Red Data Flow / Processing Chart (Actual Lottie URL)
-            path: 'https://assets5.lottiefiles.com/packages/lf20_l4h7y37u.json', 
-            rendererSettings: {
-                preserveAspectRatio: 'xMidYMid slice'
-            }
-        });
-
-
-        // === AURORA RIBBON CANVAS ANIMATION SCRIPT (RE-COLORED & GLITCHED) ===
-        const AURORA = {
-            init: function() {
-                this.canvas = document.getElementById('interactive-background');
-                this.kickerWordSpan = document.getElementById('kicker_word'); 
-                this.primaryCTA = document.getElementById('cta_primary');
-                this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
-
-                if (!this.canvas || !this.ctx) return;
-                
-                this.mouse = { x: null, y: null };
-                this.time = 0;
-                this.currentBlurMultiplier = 1; 
-                this.globalSpeed = 0.0001; 
-                this.waveAmplitude = 15;
-                this.mouseEffectRadius = 300;
-                this.mouseEffectStrength = 20;
-                this.baseRadius = 300; 
-                this.FADE_COLOR = 'rgba(0, 0, 0, 0.1)'; 
-                this.numPoints = 120;
-                this.ribbons = [];
-                
-                this.auroraColors = [
-                    { color: 'rgba(215, 38, 56, 0.25)', blur: 15 }, 
-                    { color: 'rgba(215, 38, 56, 0.15)', blur: 10 }, 
-                    { color: 'rgba(45, 45, 45, 0.10)', blur: 8 },    
-                    { color: 'rgba(255, 255, 255, 0.08)', blur: 6 }, 
-                    { color: 'rgba(215, 38, 56, 0.12)', blur: 9 }, 
-                    { color: 'rgba(45, 45, 45, 0.07)', blur: 5 }, 
-                    { color: 'rgba(215, 38, 56, 0.18)', blur: 11 }, 
-                    { color: 'rgba(0, 0, 0, 0.05)', blur: 3 }
-                ];
-
-                this.setupEvents();
-                this.resizeCanvas(); 
-                this.animate();
-            },
-
-            setupEvents: function() {
-                window.addEventListener('resize', this.resizeCanvas.bind(this));
-                window.addEventListener('mousemove', this.updateMousePosition.bind(this));
-                window.addEventListener('touchmove', this.updateMousePosition.bind(this));
-                window.addEventListener('mouseleave', () => { this.mouse.x = null; this.mouse.y = null; });
-                
-                if (this.primaryCTA && !prefersReducedMotion) {
-                    this.primaryCTA.addEventListener('mouseenter', () => {
-                        this.currentBlurMultiplier = 2.5; 
-                    });
-                    this.primaryCTA.addEventListener('mouseleave', () => {
-                        this.currentBlurMultiplier = 1; 
-                    });
-                }
-            },
-
-            resizeCanvas: function() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-                this.initRibbons();
-            },
-
-            initRibbons: function() {
-                this.ribbons = [];
-                const numRibbons = this.auroraColors.length;
-
-                for (let i = 0; i < numRibbons; i++) {
-                    const radiusMultiplier = 1 + (i * 0.03); 
-                    const phaseOffset = i * (Math.PI / 4); 
-                    
-                    const points = [];
-                    for (let j = 0; j < this.numPoints; j++) {
-                        points.push({ angle: (j / this.numPoints) * Math.PI * 2 });
-                    }
-                    
-                    this.ribbons.push({
-                        points: points,
-                        radius: this.baseRadius * radiusMultiplier,
-                        phase: phaseOffset,
-                        color: this.auroraColors[i].color,
-                        blur: this.auroraColors[i].blur
-                    });
-                }
-            },
-
-            updateMousePosition: function(event) {
-                 if (event.touches && event.touches.length > 0) {
-                    this.mouse.x = event.touches[0].clientX;
-                    this.mouse.y = event.touches[0].clientY;
-                } else if (event.clientX !== undefined) {
-                    this.mouse.x = event.clientX;
-                    this.mouse.y = event.clientY;
-                }
-            },
-
-            drawAuroraRibbon: function() {
-                const centerX = this.canvas.width / 2;
-                const centerY = this.canvas.height / 2;
-
-                this.ribbons.forEach(ribbon => {
-                    
-                    const calculatedPoints = ribbon.points.map(p => {
-                        const wave = Math.sin(p.angle * 4 + this.time * this.globalSpeed * 150 + ribbon.phase) * (this.waveAmplitude + Math.random() * 5);
-                        const breath = Math.sin(p.angle * 2 + this.time * this.globalSpeed * 100 + ribbon.phase / 2) * (this.waveAmplitude / 3);
-                        
-                        let radius = ribbon.radius + wave + breath;
-
-                        const rotation = Math.sin(this.time * this.globalSpeed * 75);
-                        const currentAngle = p.angle + rotation * 0.1;
-
-                        let pointX = centerX + Math.cos(currentAngle) * radius;
-                        let pointY = centerY + Math.sin(currentAngle) * radius;
-                        
-                        let dx = this.mouse.x - pointX;
-                        let dy = this.mouse.y - pointY;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
-
-                        if (distance < this.mouseEffectRadius && this.mouse.x !== null) {
-                            const strength = (1 - distance / this.mouseEffectRadius) * this.mouseEffectStrength;
-                            radius += strength * Math.sin(this.time * 0.02 + Math.random() * 0.5); 
-                        }
-
-                        return {
-                            x: centerX + Math.cos(currentAngle) * radius,
-                            y: centerY + Math.sin(currentAngle) * radius
-                        };
-                    });
-                    
-                    this.ctx.beginPath();
-                    
-                    this.ctx.shadowBlur = ribbon.blur * this.currentBlurMultiplier;
-                    this.ctx.shadowColor = ribbon.color;
-                    this.ctx.strokeStyle = ribbon.color;
-                    this.ctx.lineWidth = 2.5; 
-
-                    let p1 = calculatedPoints[calculatedPoints.length - 1]; 
-                    this.ctx.moveTo(p1.x, p1.y);
-
-                    calculatedPoints.forEach(p => {
-                        this.ctx.lineTo(p.x, p.y);
-                    });
-                    
-                    this.ctx.closePath(); 
-                    this.ctx.stroke();
-                    
-                    this.ctx.shadowBlur = 0;
-                });
-            },
-
-            animate: function() {
-                try {
-                    requestAnimationFrame(this.animate.bind(this));
-                    this.ctx.fillStyle = this.FADE_COLOR; 
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); 
-
-                    this.time++; 
-                    this.drawAuroraRibbon();
-                    
-                } catch (e) {
-                    console.error("Aurora Ribbon Animation error:", e);
-                }
-            }
-        };
-
-
-        // --- ICON INTERACTIVITY LOGIC ---
+        // --- ICON INTERACTIVITY LOGIC (Retained for the Engine section) ---
         function setupIconInteractivity() {
             const featureList = document.getElementById('the-engine'); 
             const iconContainers = featureList ? featureList.querySelectorAll('div[class*="group"]') : [];
@@ -475,8 +911,6 @@
 
 
         window.onload = function() {
-            AURORA.init();
-
             // --- HERO LOGIC ---
             const kickerWords = ["dedicated", "disciplined", "unyielding", "relentless"]; 
             let wordIndex = 0;
@@ -511,7 +945,7 @@
             revealHeroHeadlines();
 
             // --- INIT CALLS ---
-            initializeUnitToggles(); // IMPORTANT: Ensure toggles are initialized correctly on load
+            initializeUnitToggles();
             setupIconInteractivity();
             updateScrollProgress(); 
             initTestimonialTypewriter(); 
