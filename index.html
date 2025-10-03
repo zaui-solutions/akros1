@@ -9,6 +9,9 @@
     <!-- Anton for aggressive headings, Inter for clean body text -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600&family=Anton&display=swap" rel="stylesheet">
     
+    <!-- Lottie Player for dynamic animations -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
     <style>
         /* Define Akros Color Palette and Fonts */
         :root {
@@ -30,7 +33,8 @@
             position: relative;
         }
 
-        /* --- STABLE BACKGROUND EFFECT (CSS only) --- */
+        /* --- STABLE BACKGROUND EFFECT (CSS) - COMBINED WITH CANVAS --- */
+        /* Radial gradient and grain is kept for base mood and grit */
         body::before {
             content: '';
             position: fixed;
@@ -58,7 +62,7 @@
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
             background-blend-mode: overlay;
         }
-        
+
         /* --- SCROLL PROGRESS BAR --- */
         #scroll-progress {
             position: fixed;
@@ -218,17 +222,15 @@
         .unit-switch button:last-child { border-radius: 0 0.25rem 0.25rem 0; }
         .unit-switch button:not(:last-child) { border-right: 1px solid var(--color-bg); }
 
-        /* CSS Animation for Data Processing Bar */
-        @keyframes processing {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        /* Lottie container dimensions for Analyzer */
+        #lottie-data-flow {
+            width: 100%; 
+            height: 100px; 
+            margin: 0 auto;
         }
-        .processing-bar {
-            height: 4px;
-            background-color: var(--color-accent);
-            width: 30%;
-            animation: processing 1.5s infinite linear;
-        }
+
+        /* CSS Animation for Data Processing Bar (Hidden, Lottie is visible) */
+        .processing-bar { display: none; } 
     </style>
     <!-- Tailwind Customization -->
     <script>
@@ -254,6 +256,9 @@
     </script>
 </head>
 <body class="selection:bg-akros-accent selection:text-akros-bg">
+
+    <!-- INTERACTIVE AURORA CANVAS BACKGROUND (Restored) -->
+    <canvas id="interactive-background" class="fixed inset-0 w-full h-full z-0"></canvas>
 
     <!-- SCROLL PROGRESS BAR -->
     <div id="scroll-progress"></div>
@@ -372,14 +377,13 @@
 
             <div id="calculator-terminal" class="max-w-xl mx-auto p-8 space-y-8">
                 
-                <!-- Data Processing Visual (CSS Animated) -->
+                <!-- Data Processing Visual (Lottie Restored) -->
                 <div class="border border-akros-secondary p-4 bg-akros-bg text-center">
                     <p class="text-sm font-mono text-akros-accent mb-2">
                         LIVE DATA PIPELINE // STATUS: <span id="status-text">AWAITING COMMENCEMENT</span>
                     </p>
-                    <div class="w-full h-1 overflow-hidden bg-akros-secondary relative">
-                        <div id="processing-bar" class="processing-bar absolute top-0 left-0"></div>
-                    </div>
+                    <!-- Lottie container (Restored) -->
+                    <lottie-player id="lottie-data-flow" speed="1" loop autoplay></lottie-player>
                 </div>
 
                 <!-- Input Terminal -->
@@ -667,8 +671,7 @@
             observer.observe(el);
         });
 
-        // === TESTIMONIAL TYPEWRITER EFFECT (CSS Fix Only) ===
-        // Note: The typewriter effect logic remains, but we use the existing scroll-reveal
+        // === TESTIMONIAL TYPEWRITER EFFECT ===
         function typewriterEffect(element, text, delay = 50) {
             if (prefersReducedMotion) {
                 element.textContent = text;
@@ -719,7 +722,6 @@
         const heightCmInput = document.getElementById('height-cm');
         const heightFtInput = document.getElementById('height-ft');
         const heightInInput = document.getElementById('height-in');
-        const processingBar = document.getElementById('processing-bar');
         
         // Toggle Elements
         const weightUnitKgBtn = document.getElementById('weight-unit-kg');
@@ -815,7 +817,8 @@
 
         function calculateMacros() {
             statusText.textContent = 'PROCESSING...';
-            processingBar.style.display = 'block';
+            // Start Lottie animation instead of CSS bar
+            document.getElementById('lottie-data-flow').play();
 
             // Simulate data processing delay (for UX)
             setTimeout(() => {
@@ -840,7 +843,7 @@
 
                     if (isNaN(W_KG) || isNaN(H_CM) || isNaN(A) || W_KG <= 0 || H_CM <= 0) {
                         statusText.textContent = 'ERROR: INVALID DATA';
-                        processingBar.style.display = 'none';
+                        document.getElementById('lottie-data-flow').stop();
                         return;
                     }
 
@@ -870,17 +873,178 @@
                     
                     resultsOutput.classList.remove('hidden');
                     statusText.textContent = 'PRESCRIPTION ISSUED';
-                    processingBar.style.display = 'none';
+                    document.getElementById('lottie-data-flow').stop();
                     
                     resultsOutput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
                 } catch (error) {
                     console.error("Calculation Error:", error);
                     statusText.textContent = 'ERROR: RECALIBRATE';
-                    processingBar.style.display = 'none';
+                    document.getElementById('lottie-data-flow').stop();
                 }
             }, 800); 
         }
+
+        // === AURORA RIBBON CANVAS ANIMATION SCRIPT (RESTORED) ===
+        const AURORA = {
+            init: function() {
+                this.canvas = document.getElementById('interactive-background');
+                this.primaryCTA = document.getElementById('cta_primary');
+                this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
+
+                if (!this.canvas || !this.ctx) return;
+                
+                this.mouse = { x: null, y: null };
+                this.time = 0;
+                this.currentBlurMultiplier = 1; 
+                this.globalSpeed = 0.0001; // Slower speed
+                this.waveAmplitude = 15;
+                this.mouseEffectRadius = 300;
+                this.mouseEffectStrength = 20;
+                this.baseRadius = 300; 
+                this.FADE_COLOR = 'rgba(0, 0, 0, 0.1)'; 
+                this.numPoints = 120;
+                this.ribbons = [];
+                
+                this.auroraColors = [
+                    { color: 'rgba(215, 38, 56, 0.25)', blur: 15 }, 
+                    { color: 'rgba(215, 38, 56, 0.15)', blur: 10 }, 
+                    { color: 'rgba(45, 45, 45, 0.10)', blur: 8 },    
+                    { color: 'rgba(255, 255, 255, 0.08)', blur: 6 }, 
+                    { color: 'rgba(215, 38, 56, 0.12)', blur: 9 }, 
+                    { color: 'rgba(45, 45, 45, 0.07)', blur: 5 }, 
+                    { color: 'rgba(215, 38, 56, 0.18)', blur: 11 }, 
+                    { color: 'rgba(0, 0, 0, 0.05)', blur: 3 }
+                ];
+
+                this.setupEvents();
+                this.resizeCanvas(); 
+                this.animate();
+            },
+
+            setupEvents: function() {
+                window.addEventListener('resize', this.resizeCanvas.bind(this));
+                window.addEventListener('mousemove', this.updateMousePosition.bind(this));
+                window.addEventListener('touchmove', this.updateMousePosition.bind(this));
+                window.addEventListener('mouseleave', () => { this.mouse.x = null; this.mouse.y = null; });
+                
+                if (this.primaryCTA && !prefersReducedMotion) {
+                    this.primaryCTA.addEventListener('mouseenter', () => {
+                        this.currentBlurMultiplier = 2.5; 
+                    });
+                    this.primaryCTA.addEventListener('mouseleave', () => {
+                        this.currentBlurMultiplier = 1; 
+                    });
+                }
+            },
+
+            resizeCanvas: function() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.initRibbons();
+            },
+
+            initRibbons: function() {
+                this.ribbons = [];
+                const numRibbons = this.auroraColors.length;
+
+                for (let i = 0; i < numRibbons; i++) {
+                    const radiusMultiplier = 1 + (i * 0.03); 
+                    const phaseOffset = i * (Math.PI / 4); 
+                    
+                    const points = [];
+                    for (let j = 0; j < this.numPoints; j++) {
+                        points.push({ angle: (j / this.numPoints) * Math.PI * 2 });
+                    }
+                    
+                    this.ribbons.push({
+                        points: points,
+                        radius: this.baseRadius * radiusMultiplier,
+                        phase: phaseOffset,
+                        color: this.auroraColors[i].color,
+                        blur: this.auroraColors[i].blur
+                    });
+                }
+            },
+
+            updateMousePosition: function(event) {
+                 if (event.touches && event.touches.length > 0) {
+                    this.mouse.x = event.touches[0].clientX;
+                    this.mouse.y = event.touches[0].clientY;
+                } else if (event.clientX !== undefined) {
+                    this.mouse.x = event.clientX;
+                    this.mouse.y = event.clientY;
+                }
+            },
+
+            drawAuroraRibbon: function() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                this.ribbons.forEach(ribbon => {
+                    
+                    const calculatedPoints = ribbon.points.map(p => {
+                        const wave = Math.sin(p.angle * 4 + this.time * this.globalSpeed * 150 + ribbon.phase) * (this.waveAmplitude + Math.random() * 5);
+                        const breath = Math.sin(p.angle * 2 + this.time * this.globalSpeed * 100 + ribbon.phase / 2) * (this.waveAmplitude / 3);
+                        
+                        let radius = ribbon.radius + wave + breath;
+
+                        const rotation = Math.sin(this.time * this.globalSpeed * 75);
+                        const currentAngle = p.angle + rotation * 0.1;
+
+                        let pointX = centerX + Math.cos(currentAngle) * radius;
+                        let pointY = centerY + Math.sin(currentAngle) * radius;
+                        
+                        let dx = this.mouse.x - pointX;
+                        let dy = this.mouse.y - pointY;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < this.mouseEffectRadius && this.mouse.x !== null) {
+                            const strength = (1 - distance / this.mouseEffectRadius) * this.mouseEffectStrength;
+                            radius += strength * Math.sin(this.time * 0.02 + Math.random() * 0.5); 
+                        }
+
+                        return {
+                            x: centerX + Math.cos(currentAngle) * radius,
+                            y: centerY + Math.sin(currentAngle) * radius
+                        };
+                    });
+                    
+                    this.ctx.beginPath();
+                    
+                    this.ctx.shadowBlur = ribbon.blur * this.currentBlurMultiplier;
+                    this.ctx.shadowColor = ribbon.color;
+                    this.ctx.strokeStyle = ribbon.color;
+                    this.ctx.lineWidth = 2.5; 
+
+                    let p1 = calculatedPoints[calculatedPoints.length - 1]; 
+                    this.ctx.moveTo(p1.x, p1.y);
+
+                    calculatedPoints.forEach(p => {
+                        this.ctx.lineTo(p.x, p.y);
+                    });
+                    
+                    this.ctx.closePath(); 
+                    this.ctx.stroke();
+                    
+                    this.ctx.shadowBlur = 0;
+                });
+            },
+
+            animate: function() {
+                try {
+                    requestAnimationFrame(this.animate.bind(this));
+                    this.ctx.fillStyle = this.FADE_COLOR; 
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height); 
+
+                    this.time++; 
+                    this.drawAuroraRibbon();
+                    
+                } catch (e) {
+                    console.error("Aurora Ribbon Animation error:", e);
+                }
+            }
+        };
 
         // --- ICON INTERACTIVITY LOGIC (Retained for the Engine section) ---
         function setupIconInteractivity() {
@@ -949,5 +1113,9 @@
             setupIconInteractivity();
             updateScrollProgress(); 
             initTestimonialTypewriter(); 
+            AURORA.init(); // Initialize the restored Aurora animation
+
+            // Set Lottie source path immediately on load
+            document.getElementById('lottie-data-flow').setAttribute('src', 'https://assets5.lottiefiles.com/packages/lf20_l4h7y37u.json');
         };
     </script>
